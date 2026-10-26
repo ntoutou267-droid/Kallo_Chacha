@@ -1,19 +1,10 @@
 """
-OBITO NEXUS — Render-ready Telegram bot
-Checker engine taken from the WORKING hi2 bot (real availability checks).
-
-Run locally:  python bot.py
-Render: Background Worker, start command `python bot.py`
-
-Required env var : BOT_TOKEN   (falls back to the working token if unset)
-Optional env vars: OWNER_USER_ID, OWNER_USERNAME, SUPPORT_CHAT, DB_FILE
-
-Public commands: /start /help /single /bulk
-Admin commands stay hidden from the public list.
+KALLO NEXUS — Final Edition
+Run locally:  python Ckbot.py
 """
 
-from flask import Flask 
-from threading import Thread
+# from flask import Flask 
+# from threading import Thread
 import asyncio
 import html
 import json
@@ -37,41 +28,37 @@ from telegram.ext import (
 )
 from telegram.request import HTTPXRequest
 
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "write whatever u want or create a web page❗️😼", 200
-
-@app.route("/health")
-def health():
-    return "OK", 200
-
-def run():
-    app.run(host="0.0.0.0", port=10000)
-
-def keep_alive():
-    server = Thread(target=run, daemon=True)
-    server.start()
-keep_alive()
+# Flask server (ফোনে চালানোর জন্য বন্ধ রাখা হয়েছে, Render-এ চাইলে কমেন্ট তুলে দিন)
+# app = Flask(__name__)
+# @app.route("/")
+# def home():
+#     return "write whatever u want or create a web page❗️😼", 200
+# @app.route("/health")
+# def health():
+#     return "OK", 200
+# def run():
+#     app.run(host="0.0.0.0", port=10000)
+# def keep_alive():
+#     server = Thread(target=run, daemon=True)
+#     server.start()
+# keep_alive()
 
 # ──────────────────────────────────────────────────────────────
 # CONFIG
 # ──────────────────────────────────────────────────────────────
-BOT_TOKEN = os.getenv("8404717126:AAF6untl8TV-DyEM-2FgnjLfeaYUAliiZX0", "").strip()
+BOT_TOKEN = "8404717126:AAF6untl8TV-DyEM-2FgnjLfeaYUAliiZX0"
 
-OWNER_USER_ID = int(os.getenv("OWNER_USER_ID", "8635902333"))   # your Telegram user ID
-OWNER_USERNAME = os.getenv("OWNER_USERNAME", "f4did").lstrip("@")
-SUPPORT_CHAT = os.getenv("SUPPORT_CHAT", "r3alhero").lstrip("@")
-BOT_NAME = "OBITO"
+OWNER_USER_ID = 8635902333   # your Telegram user ID
+OWNER_USERNAME = "mva_kallo"
+SUPPORT_CHAT = "mva_kallo"
+BOT_NAME = "KALLO"
 
 NEW_USER_CREDITS = 20
 SINGLE_CHECK_COST = 1
 BULK_CHECK_COST = 1
 REFERRER_BONUS = 10
 REFERRED_BONUS = 5
-DB_FILE = Path(os.getenv("DB_FILE", "data/obito_db.json"))
+DB_FILE = Path("data/kallo_db.json")
 
 HISTORY_CAP = 800      # kept check records
 LOG_CAP = 400          # kept redeem / premium records
@@ -81,16 +68,15 @@ logging.basicConfig(
     level=os.getenv("LOG_LEVEL", "INFO"),
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
-log = logging.getLogger("obito")
+log = logging.getLogger("kallo")
 
-# ── BRAND / SIGNATURE (so nobody claims it) ───────────────────
-BRAND = "𝐎𝐁𝐈𝐓𝐎 𝐍𝐄𝐗𝐔𝐒"
-SIGN = "ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴏʙɪᴛᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ 𖣂"
+# ── BRAND / SIGNATURE ─────────────────────────────────────────
+BRAND = "𝐊𝐀𝐋𝐋𝐎 𝐍𝐄𝐗𝐔𝐒"
+SIGN = "ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴋᴀʟʟᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ 𖣂"
 MARK_STAMP = f"⟡ {BRAND} · 𝐒𝐂𝐀𝐍 𝐂𝐎𝐑𝐄 ⟡"
 
-
 # ──────────────────────────────────────────────────────────────
-# REAL AVAILABILITY CHECK ENGINE  (from the working hi2 bot)
+# REAL AVAILABILITY CHECK ENGINE
 # ──────────────────────────────────────────────────────────────
 SUPPORTED_DOMAINS = ["hi2.in", "telegmail.com"]
 RECAPTCHA_SITEKEY = "6LfEUPkgAAAAAKTgbMoewQkWBEQhO2VPL4QviKct"
@@ -136,33 +122,26 @@ VERDICT = {
 }
 MARK = {"taken": "🔴", "not_taken": "🟢", "unknown": "🟡"}
 
-
 def _marquee(i, width=11):
-    """Ping-pong radar dot inside a track."""
     span = 2 * (width - 1)
     pos = i % span
     if pos >= width:
         pos = span - pos
     return "·" * pos + "◉" + "·" * (width - pos - 1)
 
-
 def _bar(done, total, width=14):
     filled = int(width * done / total) if total else 0
     filled = max(0, min(width, filled))
     return "█" * filled + "░" * (width - filled)
 
-
 def scan_id():
     return secrets.token_hex(3).upper()
-
 
 def stamp():
     return datetime.now(timezone.utc).strftime("%d %b · %H:%M UTC")
 
-
 def short_ts():
     return datetime.now(timezone.utc).strftime("%d %b %H:%M")
-
 
 def build_session(seed_cookies=True):
     s = requests.Session()
@@ -181,7 +160,6 @@ def build_session(seed_cookies=True):
         for k, v in DEFAULT_COOKIES.items():
             s.cookies.set(k, v, domain="hi2.in")
     return s
-
 
 def solve_recaptcha_hi2(session):
     try:
@@ -219,9 +197,7 @@ def solve_recaptcha_hi2(session):
         log.debug("recaptcha solve failed: %s", e)
         return None
 
-
 def check_hi2_email(email):
-    """Returns 'taken' | 'not_taken' | 'unknown'."""
     if "@" not in email:
         return "unknown"
     prefix, domain = email.split("@", 1)
@@ -270,20 +246,16 @@ def check_hi2_email(email):
         log.debug("hi2 check error: %s", e)
         return "unknown"
 
-
 # ──────────────────────────────────────────────────────────────
 # ANIMATED SCAN ROUTINES
 # ──────────────────────────────────────────────────────────────
 async def _tick(fut, seconds=1.05):
-    """Sleep in small slices while the thread future runs."""
     try:
         await asyncio.wait_for(asyncio.shield(fut), timeout=seconds)
     except asyncio.TimeoutError:
         pass
 
-
 async def scan_single_animated(msg, email):
-    """Animated single scan. Returns (result, elapsed_seconds, message)."""
     t0 = time.monotonic()
     fut = asyncio.ensure_future(asyncio.to_thread(check_hi2_email, email))
     target = None
@@ -312,9 +284,7 @@ async def scan_single_animated(msg, email):
         await _tick(fut)
     return fut.result(), time.monotonic() - t0, target
 
-
 async def scan_bulk_animated(msg, emails, status_msg):
-    """Animated bulk scan with live progress bar. Returns (lines, elapsed)."""
     t0 = time.monotonic()
     total = len(emails)
     lines = []
@@ -348,7 +318,6 @@ async def scan_bulk_animated(msg, emails, status_msg):
 
     return lines, time.monotonic() - t0
 
-
 def single_report(email, result, elapsed, uid, u):
     mark, label, note = VERDICT.get(result, VERDICT["unknown"])
     node = email.split("@", 1)[1] if "@" in email else "hi2.in"
@@ -365,9 +334,7 @@ def single_report(email, result, elapsed, uid, u):
         f"⚡ <b>𝐁𝐀𝐋𝐀𝐍𝐂𝐄</b> ‣ {html.escape(credits_label(uid, u))}"
     )
 
-
 def bulk_report_chunks(lines, valid_count, elapsed):
-    """Splits the bulk report so huge batches never break the 4096 limit."""
     free = sum(1 for l in lines if "𝐅 𝐑 𝐄 𝐄" in l)
     taken = sum(1 for l in lines if "𝐓 𝐀 𝐊 𝐄 𝐍" in l)
     unknown = valid_count - free - taken
@@ -406,7 +373,6 @@ def bulk_report_chunks(lines, valid_count, elapsed):
     chunks[-1] += footer
     return chunks
 
-
 def skipped_report(invalid):
     return (
         "⚠️ <b>𝐒 𝐊 𝐈 𝐏 𝐏 𝐄 𝐃</b>\n"
@@ -415,13 +381,11 @@ def skipped_report(invalid):
         + "\n└──────────────────────────┘"
     )
 
-
 # ──────────────────────────────────────────────────────────────
 # DATABASE / HELPERS
 # ──────────────────────────────────────────────────────────────
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
-
 
 def default_db():
     return {
@@ -434,7 +398,6 @@ def default_db():
         "redeem_log": [],
         "premium_log": [],
     }
-
 
 def load_db():
     try:
@@ -452,9 +415,7 @@ def load_db():
         log.exception("Database load failed: %s", exc)
     return default_db()
 
-
 DB = load_db()
-
 
 def save_db():
     try:
@@ -466,14 +427,11 @@ def save_db():
     except OSError:
         log.exception("Database save failed")
 
-
 def trim(lst, cap):
     if len(lst) > cap:
         del lst[:-cap]
 
-
 def log_check(uid, u, email, result, mode, save=True):
-    """Records a check for the owner's history + stats."""
     DB["stats"]["total"] = DB["stats"].get("total", 0) + 1
     DB["stats"][mode] = DB["stats"].get(mode, 0) + 1
     DB["stats"][result] = DB["stats"].get(result, 0) + 1
@@ -489,7 +447,6 @@ def log_check(uid, u, email, result, mode, save=True):
     trim(DB["checks"], HISTORY_CAP)
     if save:
         save_db()
-
 
 def user_for(uid, first_name="User", username=None):
     key = str(uid)
@@ -509,27 +466,21 @@ def user_for(uid, first_name="User", username=None):
     u.setdefault("referred_by", None)
     return u
 
-
 def is_owner(uid):
     return int(uid) == OWNER_USER_ID
-
 
 def is_admin(uid):
     return int(uid) in [int(x) for x in DB.get("admins", [])]
 
-
 def is_staff(uid):
     return is_owner(uid) or is_admin(uid)
-
 
 def has_unlimited(uid, u=None):
     u = u or DB["users"].get(str(uid), {})
     return is_owner(uid) or bool(u.get("unlimited"))
 
-
 def credits_label(uid, u):
     return "♾️ UNLIMITED" if has_unlimited(uid, u) else f"⚡ {u.get('credits', 0)} credits"
-
 
 def who(u, uid=None):
     name = html.escape((u.get("name") or "User")[:32])
@@ -537,9 +488,7 @@ def who(u, uid=None):
     idpart = f" · <code>{uid}</code>" if uid else ""
     return f"{name}{uname}{idpart}"
 
-
 async def send_rich(bot, chat_id, text):
-    """Sends raw text (HTML if possible, plain otherwise)."""
     try:
         await bot.send_message(int(chat_id), text, parse_mode="HTML")
         return True
@@ -551,7 +500,6 @@ async def send_rich(bot, chat_id, text):
             return False
     except Exception:
         return False
-
 
 # ──────────────────────────────────────────────────────────────
 # KEYBOARDS / TEXTS
@@ -566,7 +514,7 @@ def menu_text(uid, u):
     display_name = html.escape((u.get("name") or "User").strip()[:48])
     power = html.escape(credits_label(uid, u))
     return (
-        "╭━━━〔 🌌 <b>OBITO NEXUS</b> 🌌 〕━━━╮\n"
+        "╭━━━〔 🌌 <b>KALLO NEXUS</b> 🌌 〕━━━╮\n"
         "┃\n"
         "┃  🎴 <b>W E L C O M E  A B O A R D</b>\n"
         "┃\n"
@@ -580,7 +528,6 @@ def menu_text(uid, u):
         "🚀 <b>Choose Your Path Below</b>\n"
         "✦ ─── ✦ ─── ✦ ─── ✦ ─── ✦"
     )
-
 
 def main_keyboard(uid):
     rows = [
@@ -597,17 +544,14 @@ def main_keyboard(uid):
         rows.append([InlineKeyboardButton("🛡️ Admin panel", callback_data="panel")])
     return InlineKeyboardMarkup(rows)
 
-
 def back_keyboard():
     return InlineKeyboardMarkup([[InlineKeyboardButton("🏠 𝑴𝒂𝒊𝒏 𝑴𝒆𝒏𝒖", callback_data="home")]])
-
 
 def panel_back():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🔙 𝑷𝒂𝒏𝒆𝒍", callback_data="panel"),
          InlineKeyboardButton("🏠 𝑴𝒂𝒊𝒏 𝑴𝒆𝒏𝒖", callback_data="home")],
     ])
-
 
 def panel_keyboard():
     return InlineKeyboardMarkup([
@@ -629,20 +573,18 @@ def panel_keyboard():
         [InlineKeyboardButton("🏠 𝑴𝒂𝒊𝒏 𝑴𝒆𝒏𝒖", callback_data="home")],
     ])
 
-
 SINGLE_TEXT = (
     "╭━━〔 🩸 <b>𝐒 𝐈 𝐍 𝐆 𝐋 𝐄   𝐒 𝐂 𝐀 𝐍</b> 〕━━╮\n"
     "┃\n"
     "┃  ◈ Feed me <b>one</b> email.\n"
     "┃\n"
     "┃  ┌─ 𝐄 𝐗 𝐀 𝐌 𝐏 𝐋 𝐄 ─┐\n"
-    "┃  ‣ <code>obito@hi2.in</code>\n"
+    "┃  ‣ <code>kallo@hi2.in</code>\n"
     "┃  └────────────┘\n"
     "┃\n"
-    "┃  ⟡ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴏʙɪᴛᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ\n"
+    "┃  ⟡ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴋᴀʟʟᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ\n"
     "╰━━━━━━━━━━━━━━━━╯"
 )
-
 
 def bulk_text():
     return (
@@ -652,14 +594,13 @@ def bulk_text():
         "┃  ◈ Spaces, commas or new lines — all fine.\n"
         "┃\n"
         "┃  ┌─ 𝐄 𝐗 𝐀 𝐌 𝐏 𝐋 𝐄 ─┐\n"
-        "┃  ‣ <code>obito@hi2.in</code>\n"
+        "┃  ‣ <code>kallo@hi2.in</code>\n"
         "┃  ‣ <code>uchiha@hi2.in</code>\n"
         "┃  └────────────┘\n"
         "┃\n"
-        "┃  ⟡ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴏʙɪᴛᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ\n"
+        "┃  ⟡ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴋᴀʟʟᴏ ꜰʀᴀᴍᴇᴡᴏʀᴋ\n"
         "╰━━━━━━━━━━━━━━━━╯"
     )
-
 
 # ── PANEL VIEWS ───────────────────────────────────────────────
 def panel_text():
@@ -684,7 +625,6 @@ def panel_text():
         f"   {SIGN}"
     )
 
-
 def history_text():
     rows = DB["checks"][-LIST_PAGE:]
     if not rows:
@@ -701,7 +641,6 @@ def history_text():
         )
     return "\n".join(out)
 
-
 def users_text():
     users = sorted(DB["users"].items(), key=lambda kv: kv[1].get("joined", ""), reverse=True)
     if not users:
@@ -711,7 +650,6 @@ def users_text():
         tag = "♾️" if u.get("unlimited") else f"⚡{u.get('credits', 0)}"
         out.append(f"{tag} {who(u, uid)}")
     return "\n".join(out)
-
 
 def premium_text():
     rows = [(uid, u) for uid, u in DB["users"].items() if u.get("unlimited")]
@@ -727,7 +665,6 @@ def premium_text():
             out.append(f"{icon} <code>{r['uid']}</code> · {r['action']} · {r['ts']}")
     return "\n".join(out)
 
-
 def refs_text():
     rows = [(uid, u) for uid, u in DB["users"].items() if u.get("referred_users")]
     total = sum(len(u.get("referred_users", [])) for _, u in rows)
@@ -742,7 +679,6 @@ def refs_text():
             out.append(f"   ↳ {who(ku, k)}")
     return "\n".join(out)
 
-
 def claims_text():
     out = ["🎁 <b>𝐂𝐑𝐄𝐃𝐈𝐓 𝐂𝐋𝐀𝐈𝐌𝐒</b>", f"<i>{len(DB['redeem_log'])} claims</i>", "━━━━━━━━━━━━━━━━━━━━"]
     if not DB["redeem_log"]:
@@ -750,7 +686,6 @@ def claims_text():
     for r in reversed(DB["redeem_log"][-LIST_PAGE:]):
         out.append(f"⚡ +{r['credits']} · <code>{r['uid']}</code> · {html.escape(r['code'])} · {r['ts']}")
     return "\n".join(out)
-
 
 def admins_text():
     out = ["🛡️ <b>𝐀𝐃𝐌𝐈𝐍𝐒</b>", "━━━━━━━━━━━━━━━━━━━━"]
@@ -761,7 +696,6 @@ def admins_text():
     out.append("\n<i>➕ Add admin / ➖ Remove admin — owner only</i>")
     return "\n".join(out)
 
-
 def admins_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("➕ Add admin", callback_data="add_admin"),
@@ -770,7 +704,6 @@ def admins_keyboard():
          InlineKeyboardButton("🏠 𝑴𝒂𝒊𝒏 𝑴𝒆𝒏𝒖", callback_data="home")],
     ])
 
-
 def users_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📜 Check log", callback_data="p_history"),
@@ -778,7 +711,6 @@ def users_keyboard():
         [InlineKeyboardButton("🔙 𝑷𝒂𝒏𝒆𝒍", callback_data="panel"),
          InlineKeyboardButton("🏠 𝑴𝒂𝒊𝒏 𝑴𝒆𝒏𝒖", callback_data="home")],
     ])
-
 
 # ──────────────────────────────────────────────────────────────
 # TELEGRAM HANDLERS
@@ -795,7 +727,6 @@ async def safe_edit(query, text, markup=None):
                 log.exception("Fallback message failed")
     except (NetworkError, TimedOut):
         log.warning("Network issue editing message")
-
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -820,10 +751,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="HTML",
     )
 
-
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await start(update, context)
-
 
 async def single_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -833,7 +762,6 @@ async def single_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         SINGLE_TEXT, reply_markup=back_keyboard(), parse_mode="HTML"
     )
 
-
 async def bulk_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     user_for(user.id, user.first_name, user.username)
@@ -841,7 +769,6 @@ async def bulk_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.effective_message.reply_text(
         bulk_text(), reply_markup=back_keyboard(), parse_mode="HTML"
     )
-
 
 async def status_text(uid, u):
     refs = len(u.get("referred_users", []))
@@ -856,7 +783,6 @@ async def status_text(uid, u):
         f"⚡ Credits: {credits_label(uid, u)}\n👥 Referrals: {refs}\n"
         f"🔎 Your checks: {len(mine)}"
     )
-
 
 async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
@@ -883,7 +809,7 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await safe_edit(q, await status_text(uid, u), back_keyboard())
     elif data == "redeem":
         context.user_data["action"] = "redeem"
-        await safe_edit(q, "🎁 <b>REDEEM CODE</b>\n\nSend your code (example: <code>OBITO-ABC123</code>).", back_keyboard())
+        await safe_edit(q, "🎁 <b>REDEEM CODE</b>\n\nSend your code (example: <code>KALLO-ABC123</code>).", back_keyboard())
     elif data == "refer":
         bot_username = context.bot_data.get("bot_username")
         if not bot_username:
@@ -993,7 +919,6 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         await safe_edit(q, text, panel_back())
 
-
 # ── CHECK FLOW ────────────────────────────────────────────────
 def parse_entries(text, single_mode):
     if single_mode:
@@ -1020,7 +945,6 @@ def parse_entries(text, single_mode):
         else:
             valid.append(f"{it}@hi2.in")
     return valid, invalid
-
 
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
@@ -1159,7 +1083,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 credits, max_claims = int(parts[0]), int(parts[1])
                 if credits < 1 or max_claims < 1:
                     raise ValueError
-                code = "OBITO-" + "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+                code = "KALLO-" + "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(6))
                 DB["redeem_codes"][code] = {"credits": credits, "max_claims": max_claims, "claimed_by": []}
                 save_db()
                 await msg.reply_text(
@@ -1277,9 +1201,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await msg.reply_text(menu_text(uid, u), reply_markup=main_keyboard(uid), parse_mode="HTML")
 
-
 # ──────────────────────────────────────────────────────────────
-# HIDDEN ADMIN COMMANDS (not in public list)
+# HIDDEN ADMIN COMMANDS
 # ──────────────────────────────────────────────────────────────
 async def setqr_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
@@ -1305,13 +1228,11 @@ async def setqr_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     save_db()
     await msg.reply_text("✅ Payment QR saved! Premium users will now see this QR.")
 
-
 async def panel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_staff(update.effective_user.id):
         await update.effective_message.reply_text("⛔ Not authorized.")
         return
     await update.effective_message.reply_text(panel_text(), reply_markup=panel_keyboard(), parse_mode="HTML")
-
 
 async def addcredits_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
@@ -1343,7 +1264,6 @@ async def addcredits_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"   {SIGN}",
     )
 
-
 async def admin_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
     if not is_owner(uid):
@@ -1367,7 +1287,6 @@ async def admin_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     await update.effective_message.reply_text(f"✅ {target} is now an admin.")
 
-
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     err = context.error
     if isinstance(err, (TimedOut, NetworkError)):
@@ -1378,11 +1297,10 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
         return
     log.error("Unhandled update error", exc_info=(type(err), err, err.__traceback__))
 
-
 async def post_init(app: Application):
     me = await app.bot.get_me()
     app.bot_data["bot_username"] = me.username
-    log.info("OBITO NEXUS online as @%s", me.username)
+    log.info("KALLO NEXUS online as @%s", me.username)
     try:
         await app.bot.set_my_commands([
             ("start", "Open the main menu"),
@@ -1393,14 +1311,13 @@ async def post_init(app: Application):
     except Exception:
         log.exception("Could not set bot commands")
 
-
 def main():
     if not BOT_TOKEN:
         raise SystemExit("Missing BOT_TOKEN environment variable.")
 
     print("""
     ╭─────────────────────────────╮
-    │      OBITO NEXUS            │
+    │      KALLO NEXUS            │
     │      scan core · v3         │
     ╰─────────────────────────────╯
     ◈ System initialised
@@ -1441,7 +1358,6 @@ def main():
 
     log.info("Starting long-polling worker")
     app.run_polling(drop_pending_updates=False, allowed_updates=Update.ALL_TYPES, timeout=30)
-
 
 if __name__ == "__main__":
     main()
